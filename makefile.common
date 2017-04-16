@@ -31,7 +31,7 @@ recurse ?= 0
 MODULE_DIR=$(shell pwd)
 MODULE=$(notdir $(MODULE_DIR))
 #--------------------------------------
-OUTER_DEPENDS=$(shell ls dep)
+OUTER_DEPENDS=$(shell if [ -e dep ]; then ls dep; fi)
 DEPEND_MODULES=$(wildcard sub/*)
 DEPEND_LIBS=$(foreach MODULE,$(DEPEND_MODULES),$(MODULE)/lib/lib$(notdir $(MODULE)).a)
 DEPEND_INCLUDE_OPTION=$(foreach MODULE,$(DEPEND_MODULES),$(shell make --no-print-directory -s -C $(MODULE) show_include))
