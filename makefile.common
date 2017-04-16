@@ -31,6 +31,7 @@ recurse ?= 0
 MODULE_DIR=$(shell pwd)
 MODULE=$(notdir $(MODULE_DIR))
 #--------------------------------------
+OUTER_DEPENDS=$(shell ls dep)
 DEPEND_MODULES=$(wildcard sub/*)
 DEPEND_LIBS=$(foreach MODULE,$(DEPEND_MODULES),$(MODULE)/lib/lib$(notdir $(MODULE)).a)
 DEPEND_INCLUDE_OPTION=$(foreach MODULE,$(DEPEND_MODULES),$(shell make --no-print-directory -s -C $(MODULE) show_include))
@@ -90,10 +91,17 @@ PACK_CLASS=$(JAR) -cvf $@ -C tmp .
 #--------------------------------------
 ###############################################################################
 #--------------------------------------
-.PHONY:all lib clean create install test help show_include show_lib $(DEPEND_MODULES)
+.PHONY:all dep lib clean create install test help show_include show_lib $(DEPEND_MODULES) $(OUTER_DEPENDS)
 #--------------------------------------
 all:$(DEPEND_MODULES) lib $(MAIN_BINS) $(MAIN_C_BINS)
 #       @echo "make complete!!!"
+#--------------------------------------
+dep:$(OUTER_DEPENDS)
+	@echo "$(MODULE) depends with outer resource $(OUTER_DEPENDS), they are download into sub directory"
+
+$(OUTER_DEPENDS):
+	@echo "git clone `readlink dep/$@` ..."
+	@if [ -e sub/$@ ]; then cd sub/$@; git pull; cd -; else git clone `readlink dep/$@` sub/$@; fi
 #--------------------------------------
 $(DEPEND_MODULES):
 	make -C $@
@@ -124,6 +132,7 @@ create:
 	mkdir -p cpp
 	mkdir -p main
 	mkdir -p sub
+	mkdir -p dep
 #--------------------------------------
 release:
 	@if [ $(recurse) != 0 ]; then for dir in $(DEPEND_MODULES); do make -C $$dir release install_dir=$(install_dir); done; fi
@@ -186,6 +195,7 @@ DEBUG:
 	echo "resurse=$(recurse)"
 	echo $(LOCAL_LIBS)
 	echo $(LOCAL_CLASS)
+	echo $(OUTER_DEPENDS)
 #--------------------------------------
 ###############################################################################
 
